@@ -27,7 +27,7 @@ git clone https://github.com/rafaelflorindo/JDBCProduto.git
 ## Configure o Banco de Dados:
 
 - Crie um banco de dados no MySQL com o nome desejado.
-- Execute o script SQL fornecido (se disponível) para criar as tabelas necessárias.
+- Execute o script SQL fornecido (controleestoque.sql) para criar as tabelas necessárias.
 - Atualize as informações de conexão no código Java (URL, usuário e senha do banco de dados).
 
 ## Compile e Execute o Projeto:
