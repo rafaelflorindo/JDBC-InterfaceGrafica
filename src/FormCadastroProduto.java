@@ -66,7 +66,7 @@ public class FormCadastroProduto extends JFrame {
 
                     dao.inserir(new Produto(nome, preco, quantidade, descricao));
                     JOptionPane.showMessageDialog(null, "Produto Inserido com Sucesso");
-/*
+
                     if (salvarButton.getText().equals("Atualizar")) {
                         int linhaSelecionada = table1.getSelectedRow();
                         int id = (int) table1.getValueAt(linhaSelecionada, 0);
@@ -78,7 +78,7 @@ public class FormCadastroProduto extends JFrame {
                     } else {
                         dao.inserir(new Produto(nome, preco, quantidade, descricao));
                         JOptionPane.showMessageDialog(null, "Produto inserido com sucesso!");
-                    }*/
+                    }
 
                     LimparCampos();
                     atualizarTabela();
