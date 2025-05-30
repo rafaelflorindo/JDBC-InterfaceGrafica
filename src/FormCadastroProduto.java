@@ -1,8 +1,11 @@
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.URL;
 import java.util.List;
 
 public class FormCadastroProduto extends JFrame {
@@ -32,8 +35,15 @@ public class FormCadastroProduto extends JFrame {
         setContentPane(Principal);
         table1.setModel(modeloTabela);
 
+        // Alterar altura
+        JTableHeader header = table1.getTableHeader();
+        header.setPreferredSize(new Dimension(header.getWidth(), 40)); // Altura de 40 pixels
+        header.setFont(new Font("Arial", Font.BOLD, 14));// Alterar fonte
+        // (Opcional) Centralizar o texto do cabeçalho
+        ((DefaultTableCellRenderer) header.getDefaultRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
+
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setSize(500, 400);
+        setSize(700, 600);
         setLocationRelativeTo(null);
         setVisible(true);
         setResizable(false);
@@ -42,12 +52,11 @@ public class FormCadastroProduto extends JFrame {
         habilitarCampos(false);
         LimparCampos();
 
-        ImageIcon originalIcon = new ImageIcon(getClass().getResource("/imagens/add.png"));
-        Image image = originalIcon.getImage();
-        Image resizedImage = image.getScaledInstance(50, 50, Image.SCALE_SMOOTH);
-        ImageIcon resizedIcon = new ImageIcon(resizedImage);
-        incluirButton.setIcon(resizedIcon);
-        incluirButton.setText("");
+        setIconForButton(incluirButton, "/imagens/new-product.png", 50, 50);
+        setIconForButton(salvarButton, "/imagens/diskette.png", 50, 50);
+        setIconForButton(editarButton, "/imagens/edit.png", 50, 50);
+        setIconForButton(excluirButton, "/imagens/delete.png", 50, 50);
+        setIconForButton(listarButton, "/imagens/menu.png", 50, 50);
 
         incluirButton.addActionListener(new ActionListener() {
             @Override
@@ -92,6 +101,7 @@ public class FormCadastroProduto extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 modeloTabela.setRowCount(0);
+
                 // Busca os produtos e insere na tabela
                 for (Produto p : dao.listarTodos()) {
                     modeloTabela.addRow(new Object[]{
@@ -139,6 +149,19 @@ public class FormCadastroProduto extends JFrame {
                 }
             }
         });
+    }
+    private void setIconForButton(JButton button, String imagePath, int width, int height) {
+        URL iconURL = getClass().getResource(imagePath);
+        if (iconURL != null) {
+            ImageIcon originalIcon = new ImageIcon(iconURL);
+            Image image = originalIcon.getImage();
+            Image resizedImage = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+            ImageIcon resizedIcon = new ImageIcon(resizedImage);
+            button.setIcon(resizedIcon);
+            button.setText("");
+        } else {
+            System.err.println("Imagem não encontrada: " + imagePath);
+        }
     }
     private void atualizarTabela() {
         List<Produto> lista = dao.listarTodos();
