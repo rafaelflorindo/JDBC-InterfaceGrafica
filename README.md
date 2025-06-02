@@ -50,4 +50,4 @@ Este projeto está licenciado sob a Licença MIT. Consulte o arquivo LICENSE par
 ---
 
 ## 👨‍🏫 Sobre o Autor
-Desenvolvido por Rafael Florindo, professor de Tecnologia da Informação, com foco em programação web, mobile e desktop. Este projeto foi criado como material didático para aulas de programação em Java.
+Desenvolvido por Rafael Florindo, professor de Tecnologia da Informação, com foco em programação web, mobile e desktop. Este projeto foi criado como material didático para aulas de programação em Java básico  intermediário.
