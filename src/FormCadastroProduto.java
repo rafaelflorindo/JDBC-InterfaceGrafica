@@ -6,6 +6,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
+import java.text.DecimalFormat;
 import java.util.List;
 
 public class FormCadastroProduto extends JFrame {
@@ -23,11 +24,12 @@ public class FormCadastroProduto extends JFrame {
     private JScrollPane JP_Tabela;
     private JButton excluirButton;
     private JButton editarButton;
+    private JTextField TF_Total;
 
     ProdutoDAO dao = new ProdutoDAO();
 
     DefaultTableModel modeloTabela = new DefaultTableModel(
-            new Object[]{"ID","Nome", "Preço", "Quantidade", "Descrição"},
+            new Object[]{"ID","Nome", "Preço R$", "Quantidade", "Descrição", "Total R$"},
             0
     );
 
@@ -41,6 +43,10 @@ public class FormCadastroProduto extends JFrame {
         header.setFont(new Font("Arial", Font.BOLD, 14));// Alterar fonte
         // (Opcional) Centralizar o texto do cabeçalho
         ((DefaultTableCellRenderer) header.getDefaultRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
+
+
+        DecimalFormat formato = new DecimalFormat("#,##0.00");
+
 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(700, 600);
@@ -102,16 +108,32 @@ public class FormCadastroProduto extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 modeloTabela.setRowCount(0);
 
+                double total = 0.0;
+
+                DefaultTableCellRenderer alinhamentoDireita = new DefaultTableCellRenderer();
+                DefaultTableCellRenderer alinhamentoCentral = new DefaultTableCellRenderer();
+                alinhamentoDireita.setHorizontalAlignment(SwingConstants.RIGHT);
+                alinhamentoCentral.setHorizontalAlignment(SwingConstants.CENTER);
+
+                table1.getColumnModel().getColumn(0).setCellRenderer(alinhamentoCentral);
+                table1.getColumnModel().getColumn(2).setCellRenderer(alinhamentoDireita);
+                table1.getColumnModel().getColumn(3).setCellRenderer(alinhamentoCentral);
+                table1.getColumnModel().getColumn(5).setCellRenderer(alinhamentoDireita);
+
                 // Busca os produtos e insere na tabela
                 for (Produto p : dao.listarTodos()) {
                     modeloTabela.addRow(new Object[]{
                             p.getId(),
                             p.getNome(),
-                            p.getPreco(),
+                            String.valueOf(p.getPreco()),
                             p.getQuantidade(),
-                            p.getDescricao()
+                            p.getDescricao(),
+                            String.valueOf(formato.format(p.getPreco() * p.getQuantidade()))
                     });
+                    total += p.getPreco() * p.getQuantidade();
                 }
+
+                TF_Total.setText(String.valueOf(formato.format(total)));
             }
         });
         excluirButton.addActionListener(new ActionListener() {
@@ -164,19 +186,34 @@ public class FormCadastroProduto extends JFrame {
         }
     }
     private void atualizarTabela() {
+        DecimalFormat formato = new DecimalFormat("#,##0.00");
         List<Produto> lista = dao.listarTodos();
         DefaultTableModel model = new DefaultTableModel();
+
+
+
         model.addColumn("ID");
         model.addColumn("Nome");
-        model.addColumn("Preço");
+        model.addColumn("Preço R$");
         model.addColumn("Quantidade");
         model.addColumn("Descrição");
+        model.addColumn("Total R$");
 
         for (Produto p : lista) {
-            model.addRow(new Object[]{p.getId(), p.getNome(), p.getPreco(), p.getQuantidade(), p.getDescricao()});
+            model.addRow(new Object[]{p.getId(), p.getNome(), p.getPreco(), p.getQuantidade(), p.getDescricao(), String.valueOf(formato.format(p.getPreco() * p.getQuantidade()))});
         }
 
         table1.setModel(model);
+
+        DefaultTableCellRenderer alinhamentoDireita = new DefaultTableCellRenderer();
+        DefaultTableCellRenderer alinhamentoCentral = new DefaultTableCellRenderer();
+        alinhamentoDireita.setHorizontalAlignment(SwingConstants.RIGHT);
+        alinhamentoCentral.setHorizontalAlignment(SwingConstants.CENTER);
+
+        table1.getColumnModel().getColumn(0).setCellRenderer(alinhamentoCentral);
+        table1.getColumnModel().getColumn(2).setCellRenderer(alinhamentoDireita);
+        table1.getColumnModel().getColumn(3).setCellRenderer(alinhamentoCentral);
+        table1.getColumnModel().getColumn(5).setCellRenderer(alinhamentoDireita);
     }
     private void LimparCampos() {
         TF_nome.setText("");
