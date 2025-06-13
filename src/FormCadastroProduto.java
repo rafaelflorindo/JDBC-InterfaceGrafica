@@ -6,8 +6,12 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
+import java.sql.Date;
 import java.text.DecimalFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.text.SimpleDateFormat;
 
 public class FormCadastroProduto extends JFrame {
     private JButton incluirButton;
@@ -25,11 +29,14 @@ public class FormCadastroProduto extends JFrame {
     private JButton excluirButton;
     private JButton editarButton;
     private JTextField TF_Total;
+    private JComboBox combo;
+    private JTextField TF_IDSelecionado;
+    private JTextField TF_dataValidade;
 
     ProdutoDAO dao = new ProdutoDAO();
 
     DefaultTableModel modeloTabela = new DefaultTableModel(
-            new Object[]{"ID","Nome", "Preço R$", "Quantidade", "Descrição", "Total R$"},
+            new Object[]{"ID","Nome", "Preço R$", "Quantidade", "Descrição", "Data Cadastro", "Data Validade","Total R$"},
             0
     );
 
@@ -48,12 +55,14 @@ public class FormCadastroProduto extends JFrame {
         DecimalFormat formato = new DecimalFormat("#,##0.00");
 
 
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setSize(700, 600);
-        setLocationRelativeTo(null);
-        setVisible(true);
-        setResizable(false);
-        setTitle("Gerenciador de Produdos");
+        //formatação de data.
+
+            setDefaultCloseOperation(EXIT_ON_CLOSE);
+            setSize(700, 600);
+            setLocationRelativeTo(null);
+            setVisible(true);
+            setResizable(false);
+            setTitle("Gerenciador de Produdos");
 
         habilitarCampos(false);
         LimparCampos();
@@ -68,6 +77,7 @@ public class FormCadastroProduto extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 habilitarCampos(true);
+                carregarCategorias();
             }
         });
         salvarButton.addActionListener(new ActionListener() {
@@ -78,20 +88,38 @@ public class FormCadastroProduto extends JFrame {
                     double preco = Double.parseDouble(TF_preco.getText().trim());
                     int quantidade = Integer.parseInt(TF_quantidade.getText().trim());
                     String descricao = TA_descricao.getText();
+                    String dataValidadeString = TF_dataValidade.getText();
 
-                    dao.inserir(new Produto(nome, preco, quantidade, descricao));
-                    JOptionPane.showMessageDialog(null, "Produto Inserido com Sucesso");
+                    Date dataValidade= null;
+                    Date dataCadastro = Date.valueOf(LocalDate.now());
+                    System.out.println(dataCadastro);
+                    if (!dataValidadeString.isBlank()) {
+                        try {
+                            // Converte string para LocalDate usando o formato dd/MM/yyyy
+                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                            LocalDate data = LocalDate.parse(dataValidadeString, formatter);
+
+                            // Converte LocalDate para java.sql.Date
+                            dataValidade = Date.valueOf(data);
+                        } catch (Exception es) {
+                            System.out.println("Formato de data inválido! Use dd/MM/yyyy");
+                        }
+                    }
+                    //JOptionPane.showMessageDialog(null, "Produto Inserido com Sucesso");
 
                     if (salvarButton.getText().equals("Atualizar")) {
                         int linhaSelecionada = table1.getSelectedRow();
                         int id = (int) table1.getValueAt(linhaSelecionada, 0);
-                        Produto produto = new Produto(nome, preco, quantidade, descricao);
-                        produto.setId(id);
-                        dao.atualizar(produto);
+                        Produto produtoAtualizar = new Produto(nome, preco, quantidade, descricao, dataCadastro);
+                        produtoAtualizar.setId(id);
+                        produtoAtualizar.setDataValidade(dataValidade);
+                        dao.atualizar(produtoAtualizar);
                         salvarButton.setText("Salvar");
                         JOptionPane.showMessageDialog(null, "Produto atualizado com sucesso!");
                     } else {
-                        dao.inserir(new Produto(nome, preco, quantidade, descricao));
+                        Produto produtoInserir = new Produto(nome, preco, quantidade, descricao, dataCadastro);
+                        produtoInserir.setDataValidade(dataValidade);
+                        dao.inserir(produtoInserir);
                         JOptionPane.showMessageDialog(null, "Produto inserido com sucesso!");
                     }
 
@@ -100,7 +128,6 @@ public class FormCadastroProduto extends JFrame {
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(null, "Por favor, insira um número válido para preço e quantidade.", "Erro de entrada", JOptionPane.ERROR_MESSAGE);
                 }
-
             }
         });
         listarButton.addActionListener(new ActionListener() {
@@ -119,6 +146,7 @@ public class FormCadastroProduto extends JFrame {
                 table1.getColumnModel().getColumn(2).setCellRenderer(alinhamentoDireita);
                 table1.getColumnModel().getColumn(3).setCellRenderer(alinhamentoCentral);
                 table1.getColumnModel().getColumn(5).setCellRenderer(alinhamentoDireita);
+                table1.getColumnModel().getColumn(6).setCellRenderer(alinhamentoDireita);
 
                 // Busca os produtos e insere na tabela
                 for (Produto p : dao.listarTodos()) {
@@ -128,6 +156,8 @@ public class FormCadastroProduto extends JFrame {
                             String.valueOf(p.getPreco()),
                             p.getQuantidade(),
                             p.getDescricao(),
+                            p.getDataCadastro(),
+                            p.getDataValidade(),
                             String.valueOf(formato.format(p.getPreco() * p.getQuantidade()))
                     });
                     total += p.getPreco() * p.getQuantidade();
@@ -157,18 +187,35 @@ public class FormCadastroProduto extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 int linhaSelecionada = table1.getSelectedRow();
+
                 if (linhaSelecionada != -1) {
+
+                    Object dataObj = table1.getValueAt(linhaSelecionada, 6);
+                    String dataFormatada = "";
+                    if (dataObj instanceof java.util.Date) {
+                        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+                        dataFormatada = formatter.format((java.util.Date) dataObj);
+                    } else {
+                        dataFormatada = dataObj.toString(); // fallback
+                    }
+
                     // Preenche os campos com os dados da linha selecionada
                     TF_nome.setText(table1.getValueAt(linhaSelecionada, 1).toString());
                     TF_preco.setText(table1.getValueAt(linhaSelecionada, 2).toString());
                     TF_quantidade.setText(table1.getValueAt(linhaSelecionada, 3).toString());
                     TA_descricao.setText(table1.getValueAt(linhaSelecionada, 4).toString());
-
+                    TF_dataValidade.setText(dataFormatada);
                     habilitarCampos(true);
                     salvarButton.setText("Atualizar");
                 } else {
                     JOptionPane.showMessageDialog(null, "Selecione uma linha para editar.");
                 }
+            }
+        });
+        combo.addActionListener(e -> {
+            Produto selecionado = (Produto) combo.getSelectedItem();
+            if (selecionado != null) {
+                TF_IDSelecionado.setText(String.valueOf(selecionado.getId()));
             }
         });
     }
@@ -190,41 +237,85 @@ public class FormCadastroProduto extends JFrame {
         List<Produto> lista = dao.listarTodos();
         DefaultTableModel model = new DefaultTableModel();
 
-
-
         model.addColumn("ID");
         model.addColumn("Nome");
         model.addColumn("Preço R$");
         model.addColumn("Quantidade");
         model.addColumn("Descrição");
+        model.addColumn("Cadastro");
+        model.addColumn("Validade");
         model.addColumn("Total R$");
 
         for (Produto p : lista) {
-            model.addRow(new Object[]{p.getId(), p.getNome(), p.getPreco(), p.getQuantidade(), p.getDescricao(), String.valueOf(formato.format(p.getPreco() * p.getQuantidade()))});
+            // Formata data de cadastro
+            Object dataObj = p.getDataCadastro();
+            String dataFormatadaCadastro = "";
+            if (dataObj instanceof java.util.Date) {
+                SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+                dataFormatadaCadastro = formatter.format((java.util.Date) dataObj);
+            } else {
+                dataFormatadaCadastro = dataObj != null ? dataObj.toString() : "";
+            }
+
+            // Formata data de validade
+            Object dataObj1 = p.getDataValidade();
+            String dataFormatadaValidade = "";
+            if (dataObj1 instanceof java.util.Date) {
+                SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+                dataFormatadaValidade = formatter.format((java.util.Date) dataObj1);
+            } else {
+                dataFormatadaValidade = dataObj1 != null ? dataObj1.toString() : "";
+            }
+            model.addRow(new Object[]{
+                    p.getId(),
+                    p.getNome(),
+                    p.getPreco(),
+                    p.getQuantidade(),
+                    p.getDescricao(),
+                    dataFormatadaCadastro,
+                    dataFormatadaValidade,
+                    formato.format(p.getPreco() * p.getQuantidade())
+            });
         }
 
         table1.setModel(model);
-
         DefaultTableCellRenderer alinhamentoDireita = new DefaultTableCellRenderer();
         DefaultTableCellRenderer alinhamentoCentral = new DefaultTableCellRenderer();
         alinhamentoDireita.setHorizontalAlignment(SwingConstants.RIGHT);
         alinhamentoCentral.setHorizontalAlignment(SwingConstants.CENTER);
 
-        table1.getColumnModel().getColumn(0).setCellRenderer(alinhamentoCentral);
-        table1.getColumnModel().getColumn(2).setCellRenderer(alinhamentoDireita);
-        table1.getColumnModel().getColumn(3).setCellRenderer(alinhamentoCentral);
-        table1.getColumnModel().getColumn(5).setCellRenderer(alinhamentoDireita);
+        table1.getColumnModel().getColumn(0).setCellRenderer(alinhamentoCentral); // ID
+        table1.getColumnModel().getColumn(2).setCellRenderer(alinhamentoDireita); // Preço
+        table1.getColumnModel().getColumn(3).setCellRenderer(alinhamentoCentral); // Quantidade
+        table1.getColumnModel().getColumn(7).setCellRenderer(alinhamentoDireita); // Total R$
     }
+
     private void LimparCampos() {
         TF_nome.setText("");
         TF_preco.setText("");
         TF_quantidade.setText("");
+        TF_dataValidade.setText("");
         TA_descricao.setText("");
     }
     private void habilitarCampos(boolean status) {
         TF_nome.setEnabled(status);
         TF_preco.setEnabled(status);
         TF_quantidade.setEnabled(status);
+        TF_dataValidade.setEnabled(status);
         TA_descricao.setEnabled(status);
+    }
+    private void carregarCategorias() {
+        try {
+            List<Produto> lista = dao.listarTodos();
+            for (Produto p : lista) {
+                combo.addItem(p);
+            }
+            Produto selecionado = (Produto) combo.getSelectedItem();
+            if (selecionado != null) {
+                int id = selecionado.getId();
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro ao carregar categorias: " + e.getMessage());
+        }
     }
 }

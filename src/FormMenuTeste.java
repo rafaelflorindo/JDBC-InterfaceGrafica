@@ -4,6 +4,8 @@ import java.awt.event.ActionListener;
 
 public class FormMenuTeste extends JFrame {
 
+    private JPanel Principal;
+
     public FormMenuTeste() {
         // Criando a barra de menu
         JMenuBar menuPrincipal = new JMenuBar();

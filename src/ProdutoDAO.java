@@ -6,7 +6,7 @@ import java.util.List;
 
 public class ProdutoDAO {
     public void inserir(Produto produto) {
-        String sql = "INSERT INTO produtos (nome, preco, quantidade, descricao) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO produtos (nome, preco, quantidade, descricao, dataCadastro, dataValidade) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = Conexao.conectar();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -15,6 +15,15 @@ public class ProdutoDAO {
             stmt.setDouble(2, produto.getPreco());
             stmt.setInt(3, produto.getQuantidade());
             stmt.setString(4, produto.getDescricao());
+            stmt.setDate(5, produto.getDataCadastro());
+
+            if (produto.getDataValidade() != null) {
+                stmt.setDate(6, produto.getDataValidade());
+            } else {
+                stmt.setNull(6, java.sql.Types.DATE);
+            }
+
+            //stmt.setDate(6, produto.getDataValidade());
             stmt.executeUpdate();
 
             System.out.println("Produto cadastrado com sucesso!");
@@ -37,6 +46,8 @@ public class ProdutoDAO {
                 p.setPreco(rs.getDouble("preco"));
                 p.setQuantidade(rs.getInt("quantidade"));
                 p.setDescricao(rs.getString("descricao"));
+                p.setDataCadastro(rs.getDate("dataCadastro"));
+                p.setDataValidade(rs.getDate("dataValidade"));
                 produtos.add(p);
             }
         } catch (Exception e) {
@@ -46,7 +57,7 @@ public class ProdutoDAO {
         return produtos;
     }
     public void atualizar(Produto produto) {
-        String sql = "UPDATE produtos SET nome = ?, preco = ?, quantidade = ?, descricao = ? WHERE id = ?";
+        String sql = "UPDATE produtos SET nome = ?, preco = ?, quantidade = ?, descricao = ?, datavalidade = ? WHERE id = ?";
 
         try (Connection conn = Conexao.conectar();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -55,7 +66,8 @@ public class ProdutoDAO {
             stmt.setDouble(2, produto.getPreco());
             stmt.setInt(3, produto.getQuantidade());
             stmt.setString(4, produto.getDescricao());
-            stmt.setInt(5, produto.getId());
+            stmt.setDate(5, produto.getDataValidade());
+            stmt.setInt(6, produto.getId());
             stmt.executeUpdate();
 
             System.out.println("Produto atualizado com sucesso!");
